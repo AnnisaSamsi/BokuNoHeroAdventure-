@@ -1,0 +1,15 @@
+-Map files
+-Map reading files 
+
+-Character parent class for stats 
+-- Children classes for each character
+-- Use the same thing for enemies 
+
+-Player character 
+--Moving characters
+--Pulling up a character's attack menu at the end of a movement action 
+--Count how many times a character has attacked (Special attack)
+
+Enemies don't currently have to move. But eventually Player Turn, then Enemy Turn.
+
+-Have characters talking before and after a battle map/Cutscenes 
