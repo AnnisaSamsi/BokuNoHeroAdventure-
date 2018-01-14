@@ -8,6 +8,7 @@ TagManager:
   - transparent
   - clickabletile
   - button
+  - enemy
   layers:
   - Default
   - TransparentFX

@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+
 
 public class Tilemap2D : MonoBehaviour {
 
@@ -14,6 +16,14 @@ public class Tilemap2D : MonoBehaviour {
 	int mapSizex = 10;
 	int mapSizey = 10;
 	int z = 2 ;
+
+	public Button move;
+	public Button attack;
+	public Button item;
+	public Button wait;
+
+	public int range;
+
 	void Start() {
 		//public GameObject selectedUnit = GameObject.Find("Unit1"); //since we dragged Unit into this, Unit is always selected.
 
@@ -27,6 +37,12 @@ public class Tilemap2D : MonoBehaviour {
 		GenerateMapData ();
 		GeneratePathfindingGraph ();
 		GenerateMapVisual ();
+
+		move = GameObject.Find("Move").GetComponent<Button> ();
+		attack = GameObject.Find("Attack").GetComponent<Button> ();
+		item = GameObject.Find("Item").GetComponent<Button> ();
+		wait = GameObject.Find("Wait").GetComponent<Button> ();
+
 	}
 
 	void Update(){
@@ -47,8 +63,8 @@ public class Tilemap2D : MonoBehaviour {
 						Debug.Log ("Dont move until a tile is selected");
 						selectedUnit.GetComponent<Unit2D> ().currentPath = null;
 
-						selectedUnit.GetComponent<Unit2D>().tileX = (int)selectedUnit.transform.position.x;
-						selectedUnit.GetComponent<Unit2D>().tileY = (int)selectedUnit.transform.position.y;
+						selectedUnit.GetComponent<Unit2D>().tileX = Mathf.RoundToInt(selectedUnit.transform.position.x);
+						selectedUnit.GetComponent<Unit2D>().tileY = Mathf.RoundToInt(selectedUnit.transform.position.y);
 						selectedUnit.GetComponent<Unit2D> ().map = this;
 //
 //						GeneratePathfindingGraph ();
@@ -56,6 +72,41 @@ public class Tilemap2D : MonoBehaviour {
 					}
 
 				}
+
+			}
+		}
+		TileType2D grass = tileTypes [0];
+		TileType2D swamp = tileTypes [1];
+		TileType2D highlight = tileTypes [3];
+		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == true) {
+			if (grass.isWalkable == true) {
+				Debug.Log ("Unit has moved");
+
+				grass.isWalkable = false;
+				swamp.isWalkable = false;
+				highlight.isWalkable = false;
+			}
+			if (move.interactable == true) {
+				move.interactable = false;
+			}
+		}
+		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == false) {
+			if (move.interactable == false) {
+				move.interactable = true;
+			}
+		}
+		if (selectedUnit.GetComponent<Unit2D> ().charTurnEnd == true) {
+			if (wait.interactable == true) {
+				attack.interactable = false;
+				item.interactable = false;
+				wait.interactable = false;
+			}
+		}
+		if (selectedUnit.GetComponent<Unit2D> ().charTurnEnd == false) {
+			if (wait.interactable == false) {
+				attack.interactable = true;
+				item.interactable = true;
+				wait.interactable = true;
 			}
 		}
 	}
@@ -94,6 +145,52 @@ public class Tilemap2D : MonoBehaviour {
 		tiles [8, 6, 0] = 2;
 
 	}
+
+
+
+	public void MoveButton(){
+		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == false) {
+			bool highlightEn = true;
+			range = selectedUnit.GetComponent<Unit2D> ().moveRange;
+			TileType2D grass = tileTypes [0];
+			TileType2D swamp = tileTypes [1];
+			TileType2D highlight = tileTypes [3];
+			grass.isWalkable = true;
+			swamp.isWalkable = true;
+			highlight.isWalkable = true;
+			for (int x = 0; x < 10; x++) {
+				for (int y = 0; y < 10; y++) {
+					GenerateHighlight (x, y, highlightEn);
+				}
+			}
+		}
+
+	}
+
+	public void AttackButton(){
+		range = selectedUnit.GetComponent<Unit2D> ().attackRange;
+		TileType2D grass = tileTypes [0];
+		TileType2D swamp = tileTypes [1];
+		TileType2D highlight = tileTypes [3];
+		grass.isWalkable = true;
+		swamp.isWalkable = true;
+		highlight.isWalkable = true;
+		//bool highlightEn = true;
+		for (int x = 0; x < 10; x++) {
+			for (int y = 0; y < 10; y++) {
+				GenerateHighlight (x, y, true);
+			}
+			Debug.Log ("highlight");
+		}
+		Debug.Log ("Attack");
+		selectedUnit.GetComponent<Unit2D> ().hasMoved = true;
+	}
+
+	public void WaitButton(){
+		selectedUnit.GetComponent<Unit2D> ().charTurnEnd = true;
+		Debug.Log ("end turn");
+	}
+
 
 	public float CostToEnterTile(int sourcex, int sourcey, int targetx, int targety){
 
@@ -351,11 +448,9 @@ public class Tilemap2D : MonoBehaviour {
 			currentPath.Add (curr);
 			curr = prev [curr];
 		}
+			
 
-		int unitRange = selectedUnit.GetComponent<Unit2D> ().moveRange;
-
-
-		if (currentPath.Count <= unitRange+1) {	//do nothing if tile clicked is out of range.
+		if (currentPath.Count <= range+1) {	//do nothing if tile clicked is out of range.
 			GameObject highlightTile = GameObject.Find ("highlight" + coordx + coordy);
 			highlightTile.GetComponent<Renderer> ().enabled = highlightEnable;
 		}

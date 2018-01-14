@@ -8,21 +8,25 @@ public class Unit2D : MonoBehaviour {
 	public int tileY;
 	public Tilemap2D map;
 
+	public bool hasMoved = false;
+	public bool charTurnEnd = false;
+
 	public List<Node> currentPath;
 
 	public int moveRange;
+	public int attackRange;
 
 	float remainingMovement;
 	bool highlightEn = false;
 
-	public void HighlightOn(){
-		highlightEn = true;
-		for (int x = 0; x < 10; x++) {
-			for (int y = 0; y < 10; y++) {
-				map.GenerateHighlight (x, y, highlightEn);
-			}
-		}
-	}
+//	public void HighlightOn(){
+//		highlightEn = true;
+//		for (int x = 0; x < 10; x++) {
+//			for (int y = 0; y < 10; y++) {
+//				map.GenerateHighlight (x, y, highlightEn);
+//			}
+//		}
+//	}
 
 	void Update(){
 		GameObject currentSelectedUnit = GameObject.Find ("Map").GetComponent<Tilemap2D> ().selectedUnit;
@@ -39,6 +43,18 @@ public class Unit2D : MonoBehaviour {
 								map.GenerateHighlight (x, y, highlightEn);
 							}
 						}
+					}
+				}
+				if (raycastHit.collider.tag == "enemy") {
+					if (currentSelectedUnit == gameObject) {
+						int enemyPosX = Mathf.RoundToInt(raycastHit.transform.position.x);
+						int enemyPosY = Mathf.RoundToInt(raycastHit.transform.position.y);
+						int unitPosX = Mathf.RoundToInt(transform.position.x);
+						int unitPosY = Mathf.RoundToInt(transform.position.y);
+						if ((Mathf.Abs (enemyPosX - unitPosX) + Mathf.Abs (enemyPosY - unitPosY)) <= attackRange){
+							Debug.Log ("enemy in range of "+ currentSelectedUnit);
+						}
+
 					}
 				}
 //				if (highlightEn == true) {
@@ -65,7 +81,7 @@ public class Unit2D : MonoBehaviour {
 		}
 		if (currentSelectedUnit == gameObject) {
 
-			//if (highlightEn == true) {
+
 				
 			if (currentPath != null) {
 
@@ -91,12 +107,7 @@ public class Unit2D : MonoBehaviour {
 				AdvancePathing ();
 
 			}
-
 			transform.position = Vector3.Lerp (transform.position, map.TileCoordToWorldCoord (tileX, tileY), 5f * Time.deltaTime);
-
-		//}
-
-
 		}
 
 	}
@@ -123,6 +134,7 @@ public class Unit2D : MonoBehaviour {
 			currentPath = null;
 			Debug.Log ("currentPath is null");
 			//this should be where we bring up attack commands and highlight the attack range
+			hasMoved = true;
 		}
 	}
 
