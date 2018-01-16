@@ -97,6 +97,14 @@ public class Tilemap2D : MonoBehaviour {
 		}
 		if (selectedUnit.GetComponent<Unit2D> ().charTurnEnd == true) {
 			if (wait.interactable == true) {
+				grass.isWalkable = true;
+				swamp.isWalkable = true;
+				highlight.isWalkable = true;
+				for (int x = 0; x < 10; x++) {
+					for (int y = 0; y < 10; y++) {
+						GenerateHighlight (x, y, false);
+					}
+				}
 				attack.interactable = false;
 				item.interactable = false;
 				wait.interactable = false;
@@ -158,6 +166,13 @@ public class Tilemap2D : MonoBehaviour {
 			grass.isWalkable = true;
 			swamp.isWalkable = true;
 			highlight.isWalkable = true;
+
+			GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
+			int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
+			int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
+			tiles [enemyPosX, enemyPosY, 0] = 4;
+
+
 			for (int x = 0; x < 10; x++) {
 				for (int y = 0; y < 10; y++) {
 					GenerateHighlight (x, y, highlightEn);
@@ -175,6 +190,12 @@ public class Tilemap2D : MonoBehaviour {
 		grass.isWalkable = true;
 		swamp.isWalkable = true;
 		highlight.isWalkable = true;
+
+		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
+		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
+		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
+		tiles [enemyPosX, enemyPosY, 0] = 0;
+
 		//bool highlightEn = true;
 		for (int x = 0; x < 10; x++) {
 			for (int y = 0; y < 10; y++) {
@@ -184,6 +205,7 @@ public class Tilemap2D : MonoBehaviour {
 		}
 		Debug.Log ("Attack");
 		selectedUnit.GetComponent<Unit2D> ().hasMoved = true;
+		selectedUnit.GetComponent<Unit2D> ().enemySelectEn = true;
 	}
 
 	public void WaitButton(){
@@ -273,7 +295,15 @@ public class Tilemap2D : MonoBehaviour {
 	public bool UnitCanEnterTile(int x, int y){
 
 		//here would be for testing a unit's ability to enter a tile. if a unit is flying, etc.
-
+		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
+		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
+		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
+//		if ((x == enemyPosX)&&(y == enemyPosY)){
+//			tiles [x, y, 0] = 4;
+//		}
+		if ((tiles [x, y, 0] == 4) && ((x != enemyPosX) || (y != enemyPosY))) {
+			tiles [x, y, 0] = 0;
+		}
 
 		return tileTypes [tiles [x, y, 0]].isWalkable;
 	}
@@ -281,12 +311,15 @@ public class Tilemap2D : MonoBehaviour {
 	public void GeneratePathTo(int x, int y){
 		//clear out unit's old path.
 		selectedUnit.GetComponent<Unit2D> ().currentPath = null;
+
+
 //		bool highlightEnable = selectedUnit.GetComponent<Unit2D> ().highlightEn;
 //
 //		if (highlightEnable == false) {
 //
 //			return;
 //		}
+
 		if (UnitCanEnterTile (x, y) == false) {
 			//user clicked on mountain or out of range
 			return;
@@ -377,6 +410,12 @@ public class Tilemap2D : MonoBehaviour {
 
 
 	public void GenerateHighlight(int coordx, int coordy, bool highlightEnable){
+//		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
+//		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
+//		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
+//		if ((coordx == enemyPosX) && (coordy == enemyPosY)) {
+//			return;
+//		}
 		if (UnitCanEnterTile (coordx, coordy) == false) {
 			//user clicked on mountain or out of range
 			return;

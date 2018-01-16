@@ -10,11 +10,13 @@ public class Unit2D : MonoBehaviour {
 
 	public bool hasMoved = false;
 	public bool charTurnEnd = false;
+	public bool enemySelectEn = false;
 
 	public List<Node> currentPath;
 
 	public int moveRange;
 	public int attackRange;
+	public int damage;
 
 	float remainingMovement;
 	bool highlightEn = false;
@@ -45,18 +47,23 @@ public class Unit2D : MonoBehaviour {
 						}
 					}
 				}
-				if (raycastHit.collider.tag == "enemy") {
-					if (currentSelectedUnit == gameObject) {
-						int enemyPosX = Mathf.RoundToInt(raycastHit.transform.position.x);
-						int enemyPosY = Mathf.RoundToInt(raycastHit.transform.position.y);
-						int unitPosX = Mathf.RoundToInt(transform.position.x);
-						int unitPosY = Mathf.RoundToInt(transform.position.y);
-						if ((Mathf.Abs (enemyPosX - unitPosX) + Mathf.Abs (enemyPosY - unitPosY)) <= attackRange){
-							Debug.Log ("enemy in range of "+ currentSelectedUnit);
-						}
+				if (enemySelectEn == true) {
+					if (raycastHit.collider.tag == "enemy") {
+						if (currentSelectedUnit == gameObject) {
+							int enemyPosX = Mathf.RoundToInt(raycastHit.transform.position.x);
+							int enemyPosY = Mathf.RoundToInt(raycastHit.transform.position.y);
+							int unitPosX = Mathf.RoundToInt(transform.position.x);
+							int unitPosY = Mathf.RoundToInt(transform.position.y);
+							if ((Mathf.Abs (enemyPosX - unitPosX) + Mathf.Abs (enemyPosY - unitPosY)) <= attackRange){
+								Debug.Log ("enemy in range of "+ currentSelectedUnit);
+								Debug.Log (damage + " damage dealt!");							
+								charTurnEnd = true;
+							}
 
+						}
 					}
 				}
+
 //				if (highlightEn == true) {
 //					for (int x = 0; x < 10; x++) {
 //						for (int y = 0; y < 10; y++) {

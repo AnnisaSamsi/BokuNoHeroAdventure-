@@ -557,6 +557,7 @@ MonoBehaviour:
   map: {fileID: 1183028020}
   hasMoved: 0
   charTurnEnd: 0
+  enemySelectEn: 0
   moveRange: 5
   attackRange: 2
 --- !u!65 &1081116772
@@ -617,6 +618,11 @@ MonoBehaviour:
     movementCost: 1
   - name: Highlight
     tileVisualPrefab: {fileID: 1582106032127236, guid: 93ea30cc64a9b0f46a6bd905304e357d,
+      type: 2}
+    isWalkable: 0
+    movementCost: 1
+  - name: Enemy
+    tileVisualPrefab: {fileID: 1078521735450144, guid: 678dd23d95b95074fb75ce3d5af4a08c,
       type: 2}
     isWalkable: 0
     movementCost: 1
@@ -683,6 +689,7 @@ MonoBehaviour:
   map: {fileID: 1183028020}
   hasMoved: 0
   charTurnEnd: 0
+  enemySelectEn: 0
   moveRange: 5
   attackRange: 1
 --- !u!4 &1304324601
@@ -1324,6 +1331,7 @@ MonoBehaviour:
   map: {fileID: 1183028020}
   hasMoved: 0
   charTurnEnd: 0
+  enemySelectEn: 0
   moveRange: 5
   attackRange: 1
 --- !u!4 &2013523356
