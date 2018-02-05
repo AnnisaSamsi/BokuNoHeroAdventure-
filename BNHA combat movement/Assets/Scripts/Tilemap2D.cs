@@ -7,8 +7,9 @@ using UnityEngine.UI;
 public class Tilemap2D : MonoBehaviour {
 
 	public GameObject selectedUnit;
-
+	public GameObject selectedEnemy;
 	public TileType2D[] tileTypes;
+	public ItemTypes[] itemTypes;
 
 	int[,,] tiles;
 	Node[,] graph;
@@ -21,103 +22,11 @@ public class Tilemap2D : MonoBehaviour {
 	public Button attack;
 	public Button item;
 	public Button wait;
+	public bool enemySelectEn = false;
+	public bool playerTurnEnd = false;
 
 	public int range;
 
-	void Start() {
-		//public GameObject selectedUnit = GameObject.Find("Unit1"); //since we dragged Unit into this, Unit is always selected.
-
-		//set up selectedunit's variable
-		selectedUnit.GetComponent<Unit2D>().tileX = (int)selectedUnit.transform.position.x;
-		selectedUnit.GetComponent<Unit2D>().tileY = (int)selectedUnit.transform.position.y;
-		selectedUnit.GetComponent<Unit2D> ().map = this;
-
-
-
-		GenerateMapData ();
-		GeneratePathfindingGraph ();
-		GenerateMapVisual ();
-
-		move = GameObject.Find("Move").GetComponent<Button> ();
-		attack = GameObject.Find("Attack").GetComponent<Button> ();
-		item = GameObject.Find("Item").GetComponent<Button> ();
-		wait = GameObject.Find("Wait").GetComponent<Button> ();
-
-	}
-
-	void Update(){
-		if (Input.GetMouseButtonUp (0)){
-			RaycastHit raycastHit = new RaycastHit ();
-
-			if (Physics.Raycast (Camera.main.ScreenPointToRay (Input.mousePosition), out raycastHit)) {
-				if(raycastHit.collider.tag == "char"){
-					if (selectedUnit == raycastHit.collider.gameObject) {
-						Debug.Log ("You already selected this unit");
-						return;
-					}
-					if (selectedUnit != raycastHit.collider.gameObject) {
-						selectedUnit = raycastHit.collider.gameObject;
-
-					}
-					if (selectedUnit.GetComponent<Unit2D> ().currentPath == null) {
-						Debug.Log ("Dont move until a tile is selected");
-						selectedUnit.GetComponent<Unit2D> ().currentPath = null;
-
-						selectedUnit.GetComponent<Unit2D>().tileX = Mathf.RoundToInt(selectedUnit.transform.position.x);
-						selectedUnit.GetComponent<Unit2D>().tileY = Mathf.RoundToInt(selectedUnit.transform.position.y);
-						selectedUnit.GetComponent<Unit2D> ().map = this;
-//
-//						GeneratePathfindingGraph ();
-//						return;
-					}
-
-				}
-
-			}
-		}
-		TileType2D grass = tileTypes [0];
-		TileType2D swamp = tileTypes [1];
-		TileType2D highlight = tileTypes [3];
-		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == true) {
-			if (grass.isWalkable == true) {
-				Debug.Log ("Unit has moved");
-
-				grass.isWalkable = false;
-				swamp.isWalkable = false;
-				highlight.isWalkable = false;
-			}
-			if (move.interactable == true) {
-				move.interactable = false;
-			}
-		}
-		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == false) {
-			if (move.interactable == false) {
-				move.interactable = true;
-			}
-		}
-		if (selectedUnit.GetComponent<Unit2D> ().charTurnEnd == true) {
-			if (wait.interactable == true) {
-				grass.isWalkable = true;
-				swamp.isWalkable = true;
-				highlight.isWalkable = true;
-				for (int x = 0; x < 10; x++) {
-					for (int y = 0; y < 10; y++) {
-						GenerateHighlight (x, y, false);
-					}
-				}
-				attack.interactable = false;
-				item.interactable = false;
-				wait.interactable = false;
-			}
-		}
-		if (selectedUnit.GetComponent<Unit2D> ().charTurnEnd == false) {
-			if (wait.interactable == false) {
-				attack.interactable = true;
-				item.interactable = true;
-				wait.interactable = true;
-			}
-		}
-	}
 
 	void GenerateMapData(){
 
@@ -127,8 +36,8 @@ public class Tilemap2D : MonoBehaviour {
 		//initialize map tiles to be grass
 		for (x = 0; x < mapSizex; x++) {
 			for (y = 0; y < mapSizey; y++) {
-					tiles [x, y, 0] = 0;
-					tiles [x, y, 1] = 3;	//creates a layer of transparent tiles z value is just in the matrix.
+				tiles [x, y, 0] = 0;
+				tiles [x, y, 1] = 3;	//creates a layer of transparent tiles z value is just in the matrix.
 			}
 		}
 
@@ -155,78 +64,30 @@ public class Tilemap2D : MonoBehaviour {
 	}
 
 
+	void GenerateMapVisual (){
+		for (int z = 0; z < 2; z++) {
+			for (int x = 0; x < mapSizex; x++) {
+				for (int y = 0; y < mapSizey; y++) {
 
-	public void MoveButton(){
-		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == false) {
-			bool highlightEn = true;
-			range = selectedUnit.GetComponent<Unit2D> ().moveRange;
-			TileType2D grass = tileTypes [0];
-			TileType2D swamp = tileTypes [1];
-			TileType2D highlight = tileTypes [3];
-			grass.isWalkable = true;
-			swamp.isWalkable = true;
-			highlight.isWalkable = true;
-
-			GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
-			int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
-			int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
-			tiles [enemyPosX, enemyPosY, 0] = 4;
-
-
-			for (int x = 0; x < 10; x++) {
-				for (int y = 0; y < 10; y++) {
-					GenerateHighlight (x, y, highlightEn);
+					TileType2D tt = tileTypes [tiles [x, y, z]];
+					if (z != 0) {
+						GameObject gO = (GameObject)Instantiate (tt.tileVisualPrefab, new Vector3 (x, y, -.25f), Quaternion.identity);
+						//this creates a layer of transparent tiles over the map with a z offset of .25 toward the camera.
+						string prefabname = "highlight";
+						gO.name = prefabname + x + y;
+						gO.GetComponent<Renderer> ().enabled = false;
+					}
+					if (z == 0) {
+						GameObject go = (GameObject)Instantiate (tt.tileVisualPrefab, new Vector3 (x, y, z), Quaternion.identity);
+						ClickableTile2D ct = go.GetComponent<ClickableTile2D> ();
+						ct.tileX = x;
+						ct.tileY = y;		//this is only used for the non transparent tiles,
+						ct.map = this;		//since the transparent tiles do not have colliders.
+					}
 				}
 			}
 		}
-
 	}
-
-	public void AttackButton(){
-		range = selectedUnit.GetComponent<Unit2D> ().attackRange;
-		TileType2D grass = tileTypes [0];
-		TileType2D swamp = tileTypes [1];
-		TileType2D highlight = tileTypes [3];
-		grass.isWalkable = true;
-		swamp.isWalkable = true;
-		highlight.isWalkable = true;
-
-		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
-		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
-		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
-		tiles [enemyPosX, enemyPosY, 0] = 0;
-
-		//bool highlightEn = true;
-		for (int x = 0; x < 10; x++) {
-			for (int y = 0; y < 10; y++) {
-				GenerateHighlight (x, y, true);
-			}
-			Debug.Log ("highlight");
-		}
-		Debug.Log ("Attack");
-		selectedUnit.GetComponent<Unit2D> ().hasMoved = true;
-		selectedUnit.GetComponent<Unit2D> ().enemySelectEn = true;
-	}
-
-	public void WaitButton(){
-		selectedUnit.GetComponent<Unit2D> ().charTurnEnd = true;
-		Debug.Log ("end turn");
-	}
-
-
-	public float CostToEnterTile(int sourcex, int sourcey, int targetx, int targety){
-
-		TileType2D tt = tileTypes [tiles [targetx, targety, 0]];
-
-		if (tt.isWalkable == false) {
-			return Mathf.Infinity;
-		}
-
-
-		return tt.movementCost;
-
-	}
-
 
 	void GeneratePathfindingGraph (){
 		//initialize array
@@ -258,35 +119,6 @@ public class Tilemap2D : MonoBehaviour {
 		}
 	}
 
-
-	void GenerateMapVisual (){
-		for (int z = 0; z < 2; z++) {
-			for (int x = 0; x < mapSizex; x++) {
-				for (int y = 0; y < mapSizey; y++) {
-
-					TileType2D tt = tileTypes [tiles [x, y, z]];
-					if (z != 0) {
-						GameObject gO = (GameObject)Instantiate (tt.tileVisualPrefab, new Vector3 (x, y, -.25f), Quaternion.identity);
-						//this creates a layer of transparent tiles over the map with a z offset of .25 toward the camera.
-						string prefabname = "highlight";
-						gO.name = prefabname + x + y;
-						gO.GetComponent<Renderer> ().enabled = false;
-					}
-					if (z == 0) {
-						GameObject go = (GameObject)Instantiate (tt.tileVisualPrefab, new Vector3 (x, y, z), Quaternion.identity);
-						ClickableTile2D ct = go.GetComponent<ClickableTile2D> ();
-						ct.tileX = x;
-						ct.tileY = y;		//this is only used for the non transparent tiles,
-						ct.map = this;		//since the transparent tiles do not have colliders.
-					}
-
-				}
-			}
-		}
-
-
-	}
-
 	public Vector3 TileCoordToWorldCoord(int x, int y){
 
 		return new Vector3 (x, y, 0);
@@ -298,9 +130,9 @@ public class Tilemap2D : MonoBehaviour {
 		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
 		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
 		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
-//		if ((x == enemyPosX)&&(y == enemyPosY)){
-//			tiles [x, y, 0] = 4;
-//		}
+		//		if ((x == enemyPosX)&&(y == enemyPosY)){
+		//			tiles [x, y, 0] = 4;
+		//		}
 		if ((tiles [x, y, 0] == 4) && ((x != enemyPosX) || (y != enemyPosY))) {
 			tiles [x, y, 0] = 0;
 		}
@@ -308,17 +140,30 @@ public class Tilemap2D : MonoBehaviour {
 		return tileTypes [tiles [x, y, 0]].isWalkable;
 	}
 
+	public float CostToEnterTile(int sourcex, int sourcey, int targetx, int targety){
+
+		TileType2D tt = tileTypes [tiles [targetx, targety, 0]];
+
+		if (tt.isWalkable == false) {
+			return Mathf.Infinity;
+		}
+
+
+		return tt.movementCost;
+
+	}
+
 	public void GeneratePathTo(int x, int y){
 		//clear out unit's old path.
 		selectedUnit.GetComponent<Unit2D> ().currentPath = null;
 
 
-//		bool highlightEnable = selectedUnit.GetComponent<Unit2D> ().highlightEn;
-//
-//		if (highlightEnable == false) {
-//
-//			return;
-//		}
+		//		bool highlightEnable = selectedUnit.GetComponent<Unit2D> ().highlightEn;
+		//
+		//		if (highlightEnable == false) {
+		//
+		//			return;
+		//		}
 
 		if (UnitCanEnterTile (x, y) == false) {
 			//user clicked on mountain or out of range
@@ -408,14 +253,13 @@ public class Tilemap2D : MonoBehaviour {
 		}
 	}
 
-
 	public void GenerateHighlight(int coordx, int coordy, bool highlightEnable){
-//		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
-//		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
-//		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
-//		if ((coordx == enemyPosX) && (coordy == enemyPosY)) {
-//			return;
-//		}
+		//		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
+		//		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
+		//		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
+		//		if ((coordx == enemyPosX) && (coordy == enemyPosY)) {
+		//			return;
+		//		}
 		if (UnitCanEnterTile (coordx, coordy) == false) {
 			//user clicked on mountain or out of range
 			return;
@@ -487,7 +331,7 @@ public class Tilemap2D : MonoBehaviour {
 			currentPath.Add (curr);
 			curr = prev [curr];
 		}
-			
+
 
 		if (currentPath.Count <= range+1) {	//do nothing if tile clicked is out of range.
 			GameObject highlightTile = GameObject.Find ("highlight" + coordx + coordy);
@@ -503,6 +347,185 @@ public class Tilemap2D : MonoBehaviour {
 		}
 	}
 
+	public void MoveButton(){
+		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == false) {
+			bool highlightEn = true;
+			range = selectedUnit.GetComponent<Unit2D> ().moveRange;
+			TileType2D grass = tileTypes [0];
+			TileType2D swamp = tileTypes [1];
+			TileType2D highlight = tileTypes [3];
+			grass.isWalkable = true;
+			swamp.isWalkable = true;
+			highlight.isWalkable = true;
+
+			GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
+			int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
+			int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
+			tiles [enemyPosX, enemyPosY, 0] = 4;
+
+
+			for (int x = 0; x < 10; x++) {
+				for (int y = 0; y < 10; y++) {
+					GenerateHighlight (x, y, highlightEn);
+				}
+			}
+		}
+
+	}
+
+	public void AttackButton(){
+		range = selectedUnit.GetComponent<Unit2D> ().attackRange;
+		TileType2D grass = tileTypes [0];
+		TileType2D swamp = tileTypes [1];
+		TileType2D highlight = tileTypes [3];
+		grass.isWalkable = true;
+		swamp.isWalkable = true;
+		highlight.isWalkable = true;
+
+		GameObject enemy = GameObject.FindGameObjectWithTag ("enemy");
+		int enemyPosX = Mathf.RoundToInt(enemy.transform.position.x);
+		int enemyPosY = Mathf.RoundToInt(enemy.transform.position.y);
+		tiles [enemyPosX, enemyPosY, 0] = 0;
+
+		for (int x = 0; x < 10; x++) {
+			for (int y = 0; y < 10; y++) {
+				GenerateHighlight (x, y, true);
+			}
+			Debug.Log ("highlight");
+		}
+		Debug.Log ("Attack");
+		selectedUnit.GetComponent<Unit2D> ().hasMoved = true;
+		enemySelectEn = true;
+	}
+
+	public void WaitButton(){
+		EndCharTurnCheckPlayerTurn ();
+		Debug.Log ("end turn");
+	}
+
+	public void EndCharTurnCheckPlayerTurn(){
+		selectedUnit.GetComponent<Unit2D> ().charTurnEnd = true;
+		playerTurnEnd = true;
+		GameObject[] playerUnits = GameObject.FindGameObjectsWithTag("char");
+		foreach (GameObject unit in playerUnits) {
+			if (unit.GetComponent<Unit2D> ().charTurnEnd == false) {
+				playerTurnEnd = false;
+			}
+		}
+		if (playerTurnEnd == true) {
+			//call enemy turn.
+			Debug.Log("Enemy Turn");
+		}
+	}
+
+	public static void DisableUnit(Unit2D unit){
+		if (unit.isActive == false) {
+			unit.gameObject.GetComponent<BoxCollider> ().enabled = false;
+		}
+		if (unit.isActive == true) {
+			unit.gameObject.GetComponent<BoxCollider> ().enabled = true;
+		}
+//		unit.charTurnEnd = true;
+//		unit.hasMoved = true;
+	}
+
+
+
+
+
+
+	void Start() {
+		//public GameObject selectedUnit = GameObject.Find("Unit1"); //since we dragged Unit into this, Unit is always selected.
+
+		//set up selectedunit's variable
+		selectedUnit.GetComponent<Unit2D>().tileX = (int)selectedUnit.transform.position.x;
+		selectedUnit.GetComponent<Unit2D>().tileY = (int)selectedUnit.transform.position.y;
+		selectedUnit.GetComponent<Unit2D> ().map = this;
+
+
+
+		GenerateMapData ();
+		GeneratePathfindingGraph ();
+		GenerateMapVisual ();
+
+		move = GameObject.Find("Move").GetComponent<Button> ();
+		attack = GameObject.Find("Attack").GetComponent<Button> ();
+		item = GameObject.Find("Item").GetComponent<Button> ();
+		wait = GameObject.Find("Wait").GetComponent<Button> ();
+
+	}
+
+	void Update(){
+		if (Input.GetMouseButtonUp (0)){
+			RaycastHit raycastHit = new RaycastHit ();
+
+			if (Physics.Raycast (Camera.main.ScreenPointToRay (Input.mousePosition), out raycastHit)) {
+				if(raycastHit.collider.tag == "char"){
+					if (selectedUnit == raycastHit.collider.gameObject) {
+						Debug.Log ("You already selected this unit");
+						return;
+					}
+					if (selectedUnit != raycastHit.collider.gameObject) {
+						selectedUnit = raycastHit.collider.gameObject;
+
+					}
+					if (selectedUnit.GetComponent<Unit2D> ().currentPath == null) {
+						Debug.Log ("Dont move until a tile is selected");
+						selectedUnit.GetComponent<Unit2D> ().currentPath = null;
+
+						selectedUnit.GetComponent<Unit2D>().tileX = Mathf.RoundToInt(selectedUnit.transform.position.x);
+						selectedUnit.GetComponent<Unit2D>().tileY = Mathf.RoundToInt(selectedUnit.transform.position.y);
+						selectedUnit.GetComponent<Unit2D> ().map = this;
+//
+//						GeneratePathfindingGraph ();
+//						return;
+					}
+				}
+			}
+		}
+		TileType2D grass = tileTypes [0];
+		TileType2D swamp = tileTypes [1];
+		TileType2D highlight = tileTypes [3];
+		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == true) {
+			if (grass.isWalkable == true) {
+				Debug.Log ("Unit has moved");
+
+				grass.isWalkable = false;
+				swamp.isWalkable = false;
+				highlight.isWalkable = false;
+			}
+			if (move.interactable == true) {
+				move.interactable = false;
+			}
+		}
+		if (selectedUnit.GetComponent<Unit2D> ().hasMoved == false) {
+			if (move.interactable == false) {
+				move.interactable = true;
+			}
+		}
+		if (selectedUnit.GetComponent<Unit2D> ().charTurnEnd == true) {
+			if (wait.interactable == true) {
+				grass.isWalkable = true;
+				swamp.isWalkable = true;
+				highlight.isWalkable = true;
+				for (int x = 0; x < 10; x++) {
+					for (int y = 0; y < 10; y++) {
+						GenerateHighlight (x, y, false);
+					}
+				}
+				attack.interactable = false;
+				item.interactable = false;
+				wait.interactable = false;
+			}
+		}
+		if (selectedUnit.GetComponent<Unit2D> ().charTurnEnd == false) {
+			if (wait.interactable == false) {
+				attack.interactable = true;
+				item.interactable = true;
+				wait.interactable = true;
+			}
+		}
+	}
 }
 
 

@@ -8,30 +8,54 @@ public class Unit2D : MonoBehaviour {
 	public int tileY;
 	public Tilemap2D map;
 
+
+	public int health = 100;
+	public int defense;
+	public int attackDamage;
+	public bool isActive = true;
+
 	public bool hasMoved = false;
 	public bool charTurnEnd = false;
-	public bool enemySelectEn = false;
+	public int moveRange;
+	public int attackRange;
 
 	public List<Node> currentPath;
 
-	public int moveRange;
-	public int attackRange;
-	public int damage;
+
 
 	float remainingMovement;
 	bool highlightEn = false;
 
-//	public void HighlightOn(){
-//		highlightEn = true;
-//		for (int x = 0; x < 10; x++) {
-//			for (int y = 0; y < 10; y++) {
-//				map.GenerateHighlight (x, y, highlightEn);
-//			}
+	public void DamageThis(int damage){
+		damage -= defense;
+//		damage = Mathf.Clamp (damage, 0, int.MaxValue);
+		health -= damage;
+		Debug.Log (gameObject.name + " has taken " + damage + " damage");
+		map.enemySelectEn = false;
+		map.EndCharTurnCheckPlayerTurn ();
+		if (health <= 0) {
+			Debug.Log (this.name + " has passed out...");
+			isActive = false;
+			Tilemap2D.DisableUnit (this);
+		}
+	}
+//	public void UnitHitEnemy(int damage){
+//		int enemyPosX = Mathf.RoundToInt(map.selectedEnemy.transform.position.x);
+//		int enemyPosY = Mathf.RoundToInt(map.selectedEnemy.transform.position.y);
+//		int unitPosX = Mathf.RoundToInt(transform.position.x);
+//		int unitPosY = Mathf.RoundToInt(transform.position.y);
+//		if ((Mathf.Abs (enemyPosX - unitPosX) + Mathf.Abs (enemyPosY - unitPosY)) <= attackRange){
+//			Debug.Log (raycastHit.collider.gameObject.name + " in range of "+ currentSelectedUnit.name);
+//			Debug.Log (attackDamage + " damage dealt!");
+//			enemyHealth -= attackDamage;
+//			Debug.Log (raycastHit.collider.gameObject.name + " has " + enemyHealth + " HP left");
+//			charTurnEnd = true;
 //		}
 //	}
 
+
 	void Update(){
-		GameObject currentSelectedUnit = GameObject.Find ("Map").GetComponent<Tilemap2D> ().selectedUnit;
+//		GameObject currentSelectedUnit = GameObject.Find ("Map").GetComponent<Tilemap2D> ().selectedUnit;
 		if (Input.GetMouseButtonUp (0)) {
 			RaycastHit raycastHit = new RaycastHit ();
 
@@ -47,18 +71,25 @@ public class Unit2D : MonoBehaviour {
 						}
 					}
 				}
-				if (enemySelectEn == true) {
+				if (map.enemySelectEn == true) {
 					if (raycastHit.collider.tag == "enemy") {
-						if (currentSelectedUnit == gameObject) {
-							int enemyPosX = Mathf.RoundToInt(raycastHit.transform.position.x);
-							int enemyPosY = Mathf.RoundToInt(raycastHit.transform.position.y);
-							int unitPosX = Mathf.RoundToInt(transform.position.x);
-							int unitPosY = Mathf.RoundToInt(transform.position.y);
-							if ((Mathf.Abs (enemyPosX - unitPosX) + Mathf.Abs (enemyPosY - unitPosY)) <= attackRange){
-								Debug.Log ("enemy in range of "+ currentSelectedUnit);
-								Debug.Log (damage + " damage dealt!");							
-								charTurnEnd = true;
-							}
+						map.selectedEnemy = raycastHit.collider.gameObject;
+
+//						int enemyHealth = raycastHit.collider.gameObject.GetComponent<Unit2D> ().health;
+//						map.GetComponent<Tilemap2D> ().selectedEnemy = raycastHit.collider.gameObject;
+						if (map.selectedEnemy == gameObject) {
+							Debug.Log ("the selected enemy is " + gameObject.name);
+							DamageThis (map.selectedUnit.GetComponent<Unit2D> ().attackDamage);
+//							int enemyPosX = Mathf.RoundToInt(raycastHit.transform.position.x);
+//							int enemyPosY = Mathf.RoundToInt(raycastHit.transform.position.y);
+//							int unitPosX = Mathf.RoundToInt(transform.position.x);
+//							int unitPosY = Mathf.RoundToInt(transform.position.y);
+//							if ((Mathf.Abs (enemyPosX - unitPosX) + Mathf.Abs (enemyPosY - unitPosY)) <= attackRange){
+//								Debug.Log (raycastHit.collider.gameObject.name + " in range of "+ currentSelectedUnit.name);
+//								Debug.Log (attackDamage + " damage dealt!");
+//								enemyHealth -= attackDamage;
+//								Debug.Log (raycastHit.collider.gameObject.name + " has " + enemyHealth + " HP left");
+//							}
 
 						}
 					}
@@ -86,7 +117,10 @@ public class Unit2D : MonoBehaviour {
 //				} 
 			}
 		}
-		if (currentSelectedUnit == gameObject) {
+		if (Input.GetKeyUp (KeyCode.T) && gameObject==map.selectedUnit) {
+			DamageThis (17);
+		}
+		if (map.selectedUnit == gameObject) {
 
 
 				

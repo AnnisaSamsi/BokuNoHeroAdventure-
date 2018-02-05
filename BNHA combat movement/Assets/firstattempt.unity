@@ -555,9 +555,12 @@ MonoBehaviour:
   tileX: 0
   tileY: 0
   map: {fileID: 1183028020}
+  health: 100
+  defense: 8
+  attackDamage: 10
+  isActive: 1
   hasMoved: 0
   charTurnEnd: 0
-  enemySelectEn: 0
   moveRange: 5
   attackRange: 2
 --- !u!65 &1081116772
@@ -600,6 +603,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   selectedUnit: {fileID: 1081116769}
+  selectedEnemy: {fileID: 0}
   tileTypes:
   - name: Grass
     tileVisualPrefab: {fileID: 1112419197530484, guid: 69dff615dd4e57548a1e283f699b8e53,
@@ -622,14 +626,21 @@ MonoBehaviour:
     isWalkable: 0
     movementCost: 1
   - name: Enemy
-    tileVisualPrefab: {fileID: 1078521735450144, guid: 678dd23d95b95074fb75ce3d5af4a08c,
-      type: 2}
+    tileVisualPrefab: {fileID: 0}
     isWalkable: 0
     movementCost: 1
+  itemTypes:
+  - itemName: HP Potion
+    mpRecovery: 0
+    hpRecovery: 10
+  - itemName: MP Potion
+    mpRecovery: 10
+    hpRecovery: 0
   move: {fileID: 0}
   attack: {fileID: 0}
   item: {fileID: 0}
   wait: {fileID: 0}
+  enemySelectEn: 0
   range: 0
 --- !u!4 &1183028021
 Transform:
@@ -679,7 +690,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1304324598}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c49382b6305a734695859cc7f67d38e, type: 3}
   m_Name: 
@@ -687,11 +698,14 @@ MonoBehaviour:
   tileX: 0
   tileY: 0
   map: {fileID: 1183028020}
+  health: 100
+  defense: 0
+  attackDamage: 0
+  isActive: 1
   hasMoved: 0
   charTurnEnd: 0
-  enemySelectEn: 0
-  moveRange: 5
-  attackRange: 1
+  moveRange: 0
+  attackRange: 0
 --- !u!4 &1304324601
 Transform:
   m_ObjectHideFlags: 0
@@ -1329,9 +1343,12 @@ MonoBehaviour:
   tileX: 0
   tileY: 0
   map: {fileID: 1183028020}
+  health: 100
+  defense: 0
+  attackDamage: 15
+  isActive: 1
   hasMoved: 0
   charTurnEnd: 0
-  enemySelectEn: 0
   moveRange: 5
   attackRange: 1
 --- !u!4 &2013523356
